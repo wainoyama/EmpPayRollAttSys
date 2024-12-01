@@ -3,6 +3,7 @@ public class Employee extends User {
     private double hourlyRate;
     private double salary;
     private boolean isLoggedIn;
+    private PayrollComputation payrollComputation;
 
     public Employee(String name, String position, double hourlyRate) {
         super(name, "");
@@ -10,6 +11,7 @@ public class Employee extends User {
         this.hourlyRate = hourlyRate;
         this.salary = 0.0;
         this.isLoggedIn = false;
+        this.payrollComputation = new PayrollComputation(hourlyRate);
     }
 
     public String getName() {
@@ -30,6 +32,7 @@ public class Employee extends User {
 
     public void setHourlyRate(double hourlyRate) {
         this.hourlyRate = hourlyRate;
+        this.payrollComputation = new PayrollComputation(hourlyRate);
     }
 
     public double getSalary() {
@@ -70,6 +73,17 @@ public class Employee extends User {
         this.salary = baseSalary - deduction + addition;
     }
 
+    public void calculateDetailedPayroll(int overtimeHours, int holidayHours, double deductions) {
+        payrollComputation.setOvertimeHours(overtimeHours);
+        payrollComputation.setHolidayHours(holidayHours);
+        payrollComputation.setDeductions(deductions);
+        this.salary = payrollComputation.calculateNetPay();
+    }
+
+    public void printPayrollDetails() {
+        payrollComputation.printPayrollDetails();
+    }
+
     @Override
     public void displayUserInfo() {
         System.out.println("Employee: " + getName() + ", Position: " + position + ", Hourly Rate: " + hourlyRate);
@@ -78,9 +92,9 @@ public class Employee extends User {
     @Override
     public String toString() {
         return "Name: " + getName() + "\n" +
-                "Position: " + position + "\n" +
-                "Hourly Rate: " + hourlyRate + "\n" +
-                "Current Salary: " + salary;
+               "Position: " + position + "\n" +
+               "Hourly Rate: " + hourlyRate + "\n" +
+               "Current Salary: " + salary;
     }
 }
 

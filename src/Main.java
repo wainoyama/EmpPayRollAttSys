@@ -3,10 +3,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
-    private static List<Employee> employees = new ArrayList<>();
+    private static final List<Employee> employees = new ArrayList<>();
     private static Admin currentAdmin;
-    private static final double USD_TO_PHP_RATE = 50.0;
-    private static AttendanceSystem attendanceSystem = new AttendanceSystem();
 
     public static void main(String[] args) {
         initializeData();
@@ -54,9 +52,9 @@ public class Main {
         System.out.print("Enter Password: ");
         String password = scanner.nextLine();
 
-        Employee loggedInEmployee = attendanceSystem.authenticate(username, password);
+        Employee loggedInEmployee = findEmployeeByUsername(username);
 
-        if (loggedInEmployee != null) {
+        if (loggedInEmployee != null && loggedInEmployee.validatePassword(password)) {
             System.out.println("Login successful!");
             boolean loggedIn = true;
 
@@ -71,13 +69,14 @@ public class Main {
 
                 switch (userChoice) {
                     case 1:
-                        attendanceSystem.checkIn(username);
+                        System.out.println(username + " has checked in.");
                         break;
                     case 2:
-                        attendanceSystem.checkOut(username);
+                        System.out.println(username + " has checked out.");
                         break;
                     case 3:
-                        attendanceSystem.viewPayroll(username);
+                        System.out.println("Viewing payroll data for " + username);
+                        loggedInEmployee.printPayrollDetails();
                         break;
                     case 4:
                         loggedIn = false;
@@ -115,7 +114,8 @@ public class Main {
             System.out.println("3. Add employee");
             System.out.println("4. Remove employee");
             System.out.println("5. Calculate salary");
-            System.out.println("6. Return to main menu");
+            System.out.println("6. Calculate detailed payroll");
+            System.out.println("7. Return to main menu");
             System.out.print("Choose an option: ");
 
             int choice = scanner.nextInt();
@@ -138,6 +138,9 @@ public class Main {
                     calculateSalary(scanner);
                     break;
                 case 6:
+                    calculateDetailedPayroll(scanner);
+                    break;
+                case 7:
                     return;
                 default:
                     System.out.println("Invalid choice. Try again.");
@@ -168,11 +171,11 @@ public class Main {
             empToUpdate.setPosition(newPosition);
         }
 
-        System.out.print("Enter new salary (or press enter to skip): ");
-        String newSalaryStr = scanner.nextLine();
-        if (!newSalaryStr.isEmpty()) {
-            double newSalary = Double.parseDouble(newSalaryStr);
-            empToUpdate.setSalary(newSalary);
+        System.out.print("Enter new hourly rate (or press enter to skip): ");
+        String newRateStr = scanner.nextLine();
+        if (!newRateStr.isEmpty()) {
+            double newRate = Double.parseDouble(newRateStr);
+            empToUpdate.setHourlyRate(newRate);
         }
 
         System.out.println("Employee information updated successfully.");
@@ -203,11 +206,10 @@ public class Main {
         double hourlyRate = scanner.nextDouble();
         scanner.nextLine(); // Consume newline
 
-        attendanceSystem.addEmployee(newUsername, newPassword);
         Employee newEmployee = new Employee(newUsername, position, hourlyRate);
         newEmployee.setPassword(newPassword);
         employees.add(newEmployee);
-        System.out.println("Employee added successfully to both systems.");
+        System.out.println("Employee added successfully to the system.");
     }
 
     private static void removeEmployee(Scanner scanner) {
@@ -242,9 +244,39 @@ public class Main {
         System.out.printf("Final Salary for %s: %.2f PHP%n", emp.getName(), emp.getSalary());
     }
 
+    private static void calculateDetailedPayroll(Scanner scanner) {
+        System.out.print("Enter employee name: ");
+        String name = scanner.nextLine();
+
+        Employee emp = findEmployeeByName(name);
+        if (emp == null) {
+            System.out.println("Employee not found.");
+            return;
+        }
+
+        System.out.print("Enter overtime hours: ");
+        int overtimeHours = scanner.nextInt();
+        System.out.print("Enter holiday hours: ");
+        int holidayHours = scanner.nextInt();
+        System.out.print("Enter deductions: ");
+        double deductions = scanner.nextDouble();
+
+        emp.calculateDetailedPayroll(overtimeHours, holidayHours, deductions);
+        emp.printPayrollDetails();
+    }
+
     private static Employee findEmployeeByName(String name) {
         for (Employee emp : employees) {
             if (emp.getName().equalsIgnoreCase(name)) {
+                return emp;
+            }
+        }
+        return null;
+    }
+
+    private static Employee findEmployeeByUsername(String username) {
+        for (Employee emp : employees) {
+            if (emp.getUsername().equals(username)) {
                 return emp;
             }
         }
